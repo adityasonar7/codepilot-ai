@@ -5,7 +5,7 @@ All environment variables are centralized here for type-safe access.
 
 from typing import Optional
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
@@ -29,6 +29,14 @@ class Settings(BaseSettings):
         "http://localhost:8000",
         "http://127.0.0.1:3000",
     ]
+
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def parse_origins(cls, v):
+        """Accept a comma-separated string or a list for ALLOWED_ORIGINS."""
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     # ── Database ─────────────────────────────────────────────────
     DATABASE_URL: str = "postgresql+asyncpg://codepilot:codepilot@localhost:5432/codepilot_db"
